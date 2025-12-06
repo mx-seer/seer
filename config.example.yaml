@@ -1,0 +1,13 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+database:
+  path: "./data/seer.db"
+
+# AI configuration (optional - Pro only)
+# ai:
+#   provider: "ollama"      # ollama, openai, anthropic, deepseek, groq, google, mistral, openrouter
+#   endpoint: "http://localhost:11434"
+#   api_key: ""
+#   model: "llama3.2"

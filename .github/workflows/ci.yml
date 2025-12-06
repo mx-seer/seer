@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install web dependencies
+        run: cd web && bun install
+        continue-on-error: true
+
+      - name: Build frontend
+        run: cd web && bun run build
+        continue-on-error: true
+
+      - name: Run Go tests
+        run: go test -cover ./...
+
+      - name: Run E2E tests
+        run: cd web && bun run test:e2e
+        continue-on-error: true
