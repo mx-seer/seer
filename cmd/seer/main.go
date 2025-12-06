@@ -11,6 +11,7 @@ import (
 	"github.com/mx-seer/seer/internal/api"
 	"github.com/mx-seer/seer/internal/config"
 	"github.com/mx-seer/seer/internal/db"
+	"github.com/mx-seer/seer/internal/sources"
 )
 
 func main() {
@@ -34,6 +35,13 @@ func main() {
 	defer database.Close()
 
 	log.Println("Database initialized")
+
+	// Initialize source manager
+	sourceManager := sources.NewManager(database.DB)
+	if err := sourceManager.Start(); err != nil {
+		log.Fatalf("Failed to start source manager: %v", err)
+	}
+	defer sourceManager.Stop()
 
 	// Create API server
 	server := api.NewServer(database)
