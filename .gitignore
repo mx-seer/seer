@@ -40,6 +40,8 @@ Thumbs.db
 web/build/
 web/node_modules/
 web/.svelte-kit/
+web/test-results/
+web/playwright-report/
 
 # Test coverage
 *.out

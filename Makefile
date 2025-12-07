@@ -1,16 +1,21 @@
-.PHONY: build build-ce build-pro dev test clean build-frontend build-all-ce build-all-pro
+.PHONY: build build-ce build-pro dev test clean build-frontend embed-frontend build-all-ce build-all-pro
 
 # Build frontend
 build-frontend:
 	cd web && bun run build
 
+# Embed frontend into Go
+embed-frontend: build-frontend
+	rm -rf internal/api/static/*
+	cp -r web/build/* internal/api/static/
+
 # Build CE binary
-build-ce: build-frontend
+build-ce: embed-frontend
 	mkdir -p bin
 	go build -o bin/seer ./cmd/seer
 
 # Build Pro binary
-build-pro: build-frontend
+build-pro: embed-frontend
 	mkdir -p bin
 	go build -tags pro -o bin/seer-pro ./cmd/seer
 
@@ -40,7 +45,7 @@ clean:
 	rm -rf bin/ dist/ web/build data
 
 # Build all platforms (CE)
-build-all-ce: build-frontend
+build-all-ce: embed-frontend
 	mkdir -p dist
 	GOOS=linux GOARCH=amd64 go build -o dist/seer-linux-amd64 ./cmd/seer
 	GOOS=linux GOARCH=arm64 go build -o dist/seer-linux-arm64 ./cmd/seer
@@ -49,7 +54,7 @@ build-all-ce: build-frontend
 	GOOS=windows GOARCH=amd64 go build -o dist/seer-windows-amd64.exe ./cmd/seer
 
 # Build all platforms (Pro)
-build-all-pro: build-frontend
+build-all-pro: embed-frontend
 	mkdir -p dist
 	GOOS=linux GOARCH=amd64 go build -tags pro -o dist/seer-pro-linux-amd64 ./cmd/seer
 	GOOS=linux GOARCH=arm64 go build -tags pro -o dist/seer-pro-linux-arm64 ./cmd/seer

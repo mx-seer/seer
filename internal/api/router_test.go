@@ -76,15 +76,31 @@ func TestAPIHealthEndpoint(t *testing.T) {
 	}
 }
 
-func TestNotFound(t *testing.T) {
+func TestSPAFallback(t *testing.T) {
 	server := setupTestServer(t)
 
+	// Non-existent paths should return 200 with index.html (SPA routing)
 	req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
 	rec := httptest.NewRecorder()
 
 	server.Handler().ServeHTTP(rec, req)
 
+	// SPA serves index.html for all non-API routes
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status 200 for SPA fallback, got %d", rec.Code)
+	}
+}
+
+func TestAPINotFound(t *testing.T) {
+	server := setupTestServer(t)
+
+	// Non-existent API paths should return 404
+	req := httptest.NewRequest(http.MethodGet, "/api/nonexistent", nil)
+	rec := httptest.NewRecorder()
+
+	server.Handler().ServeHTTP(rec, req)
+
 	if rec.Code != http.StatusNotFound {
-		t.Errorf("expected status 404, got %d", rec.Code)
+		t.Errorf("expected status 404 for API not found, got %d", rec.Code)
 	}
 }
