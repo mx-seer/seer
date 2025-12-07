@@ -1,0 +1,25 @@
+package sources
+
+import "strings"
+
+// containsAnyKeyword checks if text contains any of the keywords (case-insensitive)
+func containsAnyKeyword(text string, keywords []string) bool {
+	lowerText := strings.ToLower(text)
+	for _, kw := range keywords {
+		if strings.Contains(lowerText, strings.ToLower(kw)) {
+			return true
+		}
+	}
+	return false
+}
+
+// truncate truncates a string to maxLen characters, adding "..." if truncated
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	if maxLen <= 3 {
+		return s[:maxLen]
+	}
+	return s[:maxLen-3] + "..."
+}

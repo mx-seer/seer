@@ -64,6 +64,28 @@ var migrations = []string{
 		version INTEGER PRIMARY KEY,
 		applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`,
+
+	// Migration 2: Alerts table (Pro feature)
+	`CREATE TABLE IF NOT EXISTS alerts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		type TEXT NOT NULL,
+		name TEXT NOT NULL,
+		destination TEXT NOT NULL,
+		min_score INTEGER DEFAULT 50,
+		enabled BOOLEAN DEFAULT true,
+		config TEXT DEFAULT '{}',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`,
+
+	// Migration 3: License table (Pro feature)
+	`CREATE TABLE IF NOT EXISTS license (
+		key TEXT PRIMARY KEY,
+		email TEXT,
+		tier TEXT,
+		expires_at DATETIME,
+		verified_at DATETIME,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`,
 }
 
 // New creates a new database connection and runs migrations
