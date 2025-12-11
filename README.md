@@ -113,4 +113,4 @@ See [LICENSE](LICENSE) file.
 ## Support
 
 - Email: seer@mendex.io
-- Issues: [GitHub Issues](https://github.com/mx-seer/seer-pro/issues)
+- Issues: [GitHub Issues](https://github.com/mx-seer/seer/issues)
