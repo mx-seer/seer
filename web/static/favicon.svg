@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="seerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Dark rounded square background -->
+  <rect x="1" y="1" width="30" height="30" rx="8" fill="#18181B" stroke="url(#seerGradient)" stroke-width="1.5"/>
+  
+  <!-- Crystal Ball -->
+  <circle cx="16" cy="13" r="7" stroke="url(#seerGradient)" stroke-width="1.5" fill="none"/>
+  
+  <!-- Shine on ball -->
+  <path d="M12 10C13 8.5 14.5 8 16 8" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- Base stand -->
+  <path d="M11 22C11 22 13 24 16 24C19 24 21 22 21 22" stroke="url(#seerGradient)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M12.5 22V20" stroke="url(#seerGradient)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M19.5 22V20" stroke="url(#seerGradient)" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

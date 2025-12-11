@@ -11,7 +11,12 @@ import (
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
-	AI       AIConfig       `yaml:"ai"`
+	Sources  SourcesConfig  `yaml:"sources"`
+}
+
+// SourcesConfig holds source fetching settings
+type SourcesConfig struct {
+	FetchInterval int `yaml:"fetch_interval"` // Interval in minutes between fetches
 }
 
 // ServerConfig holds HTTP server settings
@@ -25,14 +30,6 @@ type DatabaseConfig struct {
 	Path string `yaml:"path"`
 }
 
-// AIConfig holds AI provider settings
-type AIConfig struct {
-	Provider string `yaml:"provider"`
-	Endpoint string `yaml:"endpoint"`
-	APIKey   string `yaml:"api_key"`
-	Model    string `yaml:"model"`
-}
-
 // Default returns a Config with default values
 func Default() *Config {
 	return &Config{
@@ -43,8 +40,8 @@ func Default() *Config {
 		Database: DatabaseConfig{
 			Path: "./data/seer.db",
 		},
-		AI: AIConfig{
-			Provider: "",
+		Sources: SourcesConfig{
+			FetchInterval: 60, // Default: 1 hour
 		},
 	}
 }

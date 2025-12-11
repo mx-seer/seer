@@ -21,8 +21,8 @@ func TestDefault(t *testing.T) {
 		t.Errorf("expected database path ./data/seer.db, got %s", cfg.Database.Path)
 	}
 
-	if cfg.AI.Provider != "" {
-		t.Errorf("expected empty AI provider, got %s", cfg.AI.Provider)
+	if cfg.Sources.FetchInterval != 60 {
+		t.Errorf("expected fetch interval 60, got %d", cfg.Sources.FetchInterval)
 	}
 }
 
@@ -32,14 +32,12 @@ func TestLoad_NonExistent(t *testing.T) {
 		t.Fatalf("expected no error for nonexistent file, got %v", err)
 	}
 
-	// Should return defaults
 	if cfg.Server.Port != 8080 {
 		t.Errorf("expected default port 8080, got %d", cfg.Server.Port)
 	}
 }
 
 func TestLoad_ValidFile(t *testing.T) {
-	// Create temp config file
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
 
@@ -49,10 +47,8 @@ server:
   port: 3000
 database:
   path: "/tmp/test.db"
-ai:
-  provider: "ollama"
-  endpoint: "http://localhost:11434"
-  model: "llama3.2"
+sources:
+  fetch_interval: 30
 `
 	if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
 		t.Fatalf("failed to write temp config: %v", err)
@@ -75,12 +71,8 @@ ai:
 		t.Errorf("expected database path /tmp/test.db, got %s", cfg.Database.Path)
 	}
 
-	if cfg.AI.Provider != "ollama" {
-		t.Errorf("expected AI provider ollama, got %s", cfg.AI.Provider)
-	}
-
-	if cfg.AI.Model != "llama3.2" {
-		t.Errorf("expected AI model llama3.2, got %s", cfg.AI.Model)
+	if cfg.Sources.FetchInterval != 30 {
+		t.Errorf("expected fetch interval 30, got %d", cfg.Sources.FetchInterval)
 	}
 }
 

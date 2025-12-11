@@ -7,21 +7,24 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/mx-seer/seer/internal/api/handlers"
-	"github.com/mx-seer/seer/internal/db"
+	"github.com/mx-seer/seer-pro/internal/api/handlers"
+	"github.com/mx-seer/seer-pro/internal/db"
+	"github.com/mx-seer/seer-pro/internal/sources"
 )
 
 // Server holds the HTTP server dependencies
 type Server struct {
-	db     *db.DB
-	router *chi.Mux
+	db            *db.DB
+	router        *chi.Mux
+	sourceManager *sources.Manager
 }
 
 // NewServer creates a new API server
-func NewServer(database *db.DB) *Server {
+func NewServer(database *db.DB, sourceManager *sources.Manager) *Server {
 	s := &Server{
-		db:     database,
-		router: chi.NewRouter(),
+		db:            database,
+		router:        chi.NewRouter(),
+		sourceManager: sourceManager,
 	}
 
 	s.setupMiddleware()
@@ -79,13 +82,15 @@ func (s *Server) setupRoutes() {
 		r.Put("/sources/{id}", srcHandler.Update)
 		r.Delete("/sources/{id}", srcHandler.Delete)
 		r.Post("/sources/{id}/toggle", srcHandler.Toggle)
+		r.Post("/sources/fetch", s.handleFetchSources)
 
-		// Reports
-		repHandler := handlers.NewReportsHandler(s.db.DB)
-		r.Get("/reports", repHandler.List)
-		r.Post("/reports/generate", repHandler.Generate)
-		r.Get("/reports/{id}", repHandler.Get)
-		r.Get("/reports/{id}/prompt", repHandler.GetPrompt)
+		// Prompts
+		promptHandler := handlers.NewPromptsHandler(s.db.DB)
+		r.Get("/prompts", promptHandler.List)
+		r.Post("/prompts", promptHandler.Create)
+		r.Post("/prompts/generate", promptHandler.Generate)
+		r.Get("/prompts/{id}", promptHandler.Get)
+		r.Get("/prompts/{id}/content", promptHandler.GetContent)
 	})
 
 	// Serve embedded frontend
@@ -123,6 +128,23 @@ type HealthResponse struct {
 	Status    string `json:"status"`
 	Timestamp string `json:"timestamp"`
 	Version   string `json:"version"`
+}
+
+// handleFetchSources triggers a manual fetch of all enabled sources
+func (s *Server) handleFetchSources(w http.ResponseWriter, r *http.Request) {
+	if s.sourceManager == nil {
+		http.Error(w, "Source manager not available", http.StatusInternalServerError)
+		return
+	}
+
+	// Run fetch in background and return immediately
+	go s.sourceManager.FetchAll(r.Context())
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "started",
+		"message": "Fetching opportunities from all enabled sources",
+	})
 }
 
 // handleHealth handles the health check endpoint

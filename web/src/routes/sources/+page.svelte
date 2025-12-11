@@ -2,24 +2,23 @@
 	import { onMount } from 'svelte';
 	import {
 		getSources,
-		getSourceTypes,
-		createSource,
 		toggleSource,
-		deleteSource,
-		type Source,
-		type SourceTypes
+		type Source
 	} from '$lib/api';
 
 	let sources: Source[] = $state([]);
-	let sourceTypes: SourceTypes | null = $state(null);
 	let loading = $state(true);
-	let showAddModal = $state(false);
 
-	// Form state
-	let newSourceType = $state('');
-	let newSourceName = $state('');
-	let newSourceUrl = $state('');
-	let formError = $state('');
+	// Source icons by type
+	const sourceIcons: Record<string, { bg: string; color: string; label: string }> = {
+		hackernews: { bg: 'rgba(249, 115, 22, 0.1)', color: '#FB923C', label: 'Y' },
+		github: { bg: 'rgba(161, 161, 170, 0.1)', color: '#A1A1AA', label: '' },
+		npm: { bg: 'rgba(239, 68, 68, 0.1)', color: '#F87171', label: 'npm' },
+		devto: { bg: 'rgba(161, 161, 170, 0.1)', color: '#A1A1AA', label: 'DEV' },
+		rss: { bg: 'rgba(139, 92, 246, 0.1)', color: '#A78BFA', label: '' },
+		reddit: { bg: 'rgba(249, 115, 22, 0.1)', color: '#FB923C', label: '' },
+		producthunt: { bg: 'rgba(249, 115, 22, 0.1)', color: '#FB923C', label: '' }
+	};
 
 	onMount(async () => {
 		await loadData();
@@ -28,9 +27,7 @@
 	async function loadData() {
 		loading = true;
 		try {
-			const [s, types] = await Promise.all([getSources(), getSourceTypes()]);
-			sources = s;
-			sourceTypes = types;
+			sources = await getSources();
 		} catch (e) {
 			console.error('Failed to load sources:', e);
 		}
@@ -46,115 +43,114 @@
 		}
 	}
 
-	async function handleDelete(id: number) {
-		if (!confirm('Are you sure you want to delete this source?')) return;
-		try {
-			await deleteSource(id);
-			sources = sources.filter((s) => s.id !== id);
-		} catch (e) {
-			console.error('Failed to delete source:', e);
-		}
-	}
-
-	async function handleAdd() {
-		formError = '';
-
-		if (!newSourceType) {
-			formError = 'Please select a source type';
-			return;
-		}
-		if (!newSourceName) {
-			formError = 'Please enter a name';
-			return;
-		}
-		if (newSourceType === 'rss' && !newSourceUrl) {
-			formError = 'RSS sources require a URL';
-			return;
-		}
-
-		try {
-			const created = await createSource({
-				type: newSourceType,
-				name: newSourceName,
-				url: newSourceUrl || undefined
-			});
-			sources = [...sources, created];
-			showAddModal = false;
-			resetForm();
-		} catch (e) {
-			formError = 'Failed to create source. You may have reached the RSS limit.';
-		}
-	}
-
-	function resetForm() {
-		newSourceType = '';
-		newSourceName = '';
-		newSourceUrl = '';
-		formError = '';
-	}
-
-	function openAddModal() {
-		resetForm();
-		showAddModal = true;
+	function getActiveCount(): number {
+		return sources.filter((s) => s.enabled).length;
 	}
 </script>
 
 <div class="space-y-6">
-	<div class="flex justify-between items-center">
-		<h1 class="text-2xl font-bold">Sources</h1>
-		<button class="btn btn-primary" onclick={openAddModal}>Add Source</button>
+	<!-- Header -->
+	<div class="flex items-center justify-between">
+		<div>
+			<h1 class="text-2xl font-bold text-white mb-1">Sources</h1>
+			<p class="text-zinc-400 text-sm">Configure where Seer looks for opportunities</p>
+		</div>
+		<div class="flex items-center gap-4">
+			{#if sources.length > 0}
+				<div class="flex items-center gap-2 text-sm">
+					<span class="text-zinc-500">{getActiveCount()} of {sources.length} active</span>
+					{#if getActiveCount() > 0}
+						<span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+					{:else}
+						<span class="w-2 h-2 bg-red-400 rounded-full"></span>
+					{/if}
+				</div>
+			{/if}
+		</div>
 	</div>
 
-	{#if sourceTypes}
-		<div class="alert alert-info">
-			<span>
-				{#if sourceTypes.is_pro}
-					Pro Edition - All features unlocked
-				{:else}
-					Community Edition - RSS feeds limited to {sourceTypes.max_rss}
-				{/if}
-			</span>
-		</div>
-	{/if}
+	<!-- Info Banner -->
+	<div class="info-banner">
+		<svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+		</svg>
+		<span class="text-zinc-300">
+			Sources are automatically scanned for new opportunities. Toggle them on or off to customize your feed.
+		</span>
+	</div>
 
+	<!-- Loading State -->
 	{#if loading}
-		<div class="flex justify-center p-8">
-			<span class="loading loading-spinner loading-lg"></span>
+		<div class="flex justify-center items-center p-12">
+			<div class="loading-spinner"></div>
 		</div>
 	{:else}
-		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+		<!-- Sources Grid -->
+		<div class="grid gap-4 md:grid-cols-2">
 			{#each sources as source}
-				<div class="card bg-base-100 shadow-xl">
-					<div class="card-body">
-						<div class="flex justify-between items-start">
-							<div>
-								<h2 class="card-title">{source.name}</h2>
-								<div class="badge badge-outline">{source.type}</div>
-								{#if source.is_builtin}
-									<div class="badge badge-primary badge-sm ml-1">Built-in</div>
+				<div class="source-card" class:source-disabled={!source.enabled}>
+					<div class="flex items-start justify-between mb-4">
+						<div class="flex items-center gap-3">
+							<!-- Source Icon -->
+							<div
+								class="w-10 h-10 rounded-lg flex items-center justify-center"
+								style="background-color: {sourceIcons[source.type]?.bg || 'rgba(139, 92, 246, 0.1)'};"
+							>
+								{#if source.type === 'github'}
+									<svg class="w-5 h-5" style="color: {sourceIcons[source.type]?.color};" fill="currentColor" viewBox="0 0 24 24">
+										<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+									</svg>
+								{:else if source.type === 'rss'}
+									<svg class="w-5 h-5" style="color: {sourceIcons[source.type]?.color};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
+									</svg>
+								{:else}
+									<span class="font-bold text-sm" style="color: {sourceIcons[source.type]?.color};">
+										{sourceIcons[source.type]?.label || source.type.charAt(0).toUpperCase()}
+									</span>
 								{/if}
 							</div>
-							<input
-								type="checkbox"
-								class="toggle toggle-primary"
-								checked={source.enabled}
-								onchange={() => handleToggle(source.id)}
-							/>
+							<div>
+								<h3 class="text-white font-semibold">{source.name}</h3>
+								<p class="text-zinc-500 text-sm">
+									{#if source.url}
+										{source.url}
+									{:else}
+										{source.type}
+									{/if}
+								</p>
+							</div>
 						</div>
+						<!-- Toggle Switch (daisyUI) -->
+						<input
+							type="checkbox"
+							class="toggle toggle-primary toggle-sm"
+							checked={source.enabled}
+							onchange={() => handleToggle(source.id)}
+						/>
+					</div>
 
-						{#if source.url}
-							<p class="text-sm text-base-content/60 truncate" title={source.url}>
-								{source.url}
-							</p>
-						{/if}
-
-						<div class="card-actions justify-end mt-4">
-							{#if !source.is_builtin}
-								<button class="btn btn-error btn-sm" onclick={() => handleDelete(source.id)}>
-									Delete
-								</button>
+					<div class="space-y-3">
+						<div class="flex items-center justify-between text-sm">
+							<span class="text-zinc-400">Status</span>
+							{#if source.enabled}
+								<span class="text-green-400 flex items-center gap-1">
+									<span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+									Active
+								</span>
+							{:else}
+								<span class="text-zinc-500 flex items-center gap-1">
+									<span class="w-1.5 h-1.5 bg-zinc-500 rounded-full"></span>
+									Disabled
+								</span>
 							{/if}
 						</div>
+						{#if source.is_builtin}
+							<div class="flex items-center justify-between text-sm">
+								<span class="text-zinc-400">Type</span>
+								<span class="badge badge-outline badge-primary badge-sm">Built-in</span>
+							</div>
+						{/if}
 					</div>
 				</div>
 			{/each}
@@ -162,65 +158,49 @@
 	{/if}
 </div>
 
-<!-- Add Source Modal -->
-{#if showAddModal}
-	<div class="modal modal-open">
-		<div class="modal-box">
-			<h3 class="font-bold text-lg">Add New Source</h3>
+<style>
+	.source-card {
+		background-color: var(--seer-surface);
+		border: 1px solid var(--seer-border);
+		border-radius: 0.75rem;
+		padding: 1.5rem;
+		transition: all 0.2s ease;
+	}
 
-			{#if formError}
-				<div class="alert alert-error mt-4">
-					<span>{formError}</span>
-				</div>
-			{/if}
+	.source-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+	}
 
-			<div class="form-control mt-4">
-				<label class="label" for="source-type">
-					<span class="label-text">Type</span>
-				</label>
-				<select id="source-type" class="select select-bordered" bind:value={newSourceType}>
-					<option value="">Select type...</option>
-					{#if sourceTypes}
-						{#each sourceTypes.types as type}
-							<option value={type}>{type}</option>
-						{/each}
-					{/if}
-				</select>
-			</div>
+	.source-disabled {
+		opacity: 0.6;
+	}
 
-			<div class="form-control mt-4">
-				<label class="label" for="source-name">
-					<span class="label-text">Name</span>
-				</label>
-				<input
-					id="source-name"
-					type="text"
-					class="input input-bordered"
-					placeholder="My Custom Source"
-					bind:value={newSourceName}
-				/>
-			</div>
+	.source-disabled:hover {
+		transform: none;
+		box-shadow: none;
+	}
 
-			{#if newSourceType === 'rss'}
-				<div class="form-control mt-4">
-					<label class="label" for="source-url">
-						<span class="label-text">URL</span>
-					</label>
-					<input
-						id="source-url"
-						type="url"
-						class="input input-bordered"
-						placeholder="https://example.com/feed.xml"
-						bind:value={newSourceUrl}
-					/>
-				</div>
-			{/if}
+	.info-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 1rem 1.25rem;
+		background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.05));
+		border: 1px solid rgba(139, 92, 246, 0.2);
+		border-radius: 0.75rem;
+	}
 
-			<div class="modal-action">
-				<button class="btn" onclick={() => (showAddModal = false)}>Cancel</button>
-				<button class="btn btn-primary" onclick={handleAdd}>Add</button>
-			</div>
-		</div>
-		<button class="modal-backdrop" onclick={() => (showAddModal = false)} aria-label="Close modal"></button>
-	</div>
-{/if}
+	.loading-spinner {
+		width: 2rem;
+		height: 2rem;
+		border: 2px solid var(--seer-border);
+		border-top-color: var(--purple-500);
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+</style>

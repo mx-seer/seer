@@ -9,10 +9,7 @@ import (
 	"time"
 )
 
-const (
-	devtoAPI     = "https://dev.to/api/articles"
-	devtoBaseURL = "https://dev.to"
-)
+const devtoAPI = "https://dev.to/api/articles"
 
 // DevTo fetches articles from DEV.to
 type DevTo struct {

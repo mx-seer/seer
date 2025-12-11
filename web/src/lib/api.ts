@@ -25,8 +25,6 @@ export interface Source {
 
 export interface SourceTypes {
 	types: string[];
-	is_pro: boolean;
-	max_rss: number;
 }
 
 export interface Stats {
@@ -36,7 +34,7 @@ export interface Stats {
 	today: number;
 }
 
-export interface Report {
+export interface Prompt {
 	id: number;
 	period_start: string;
 	period_end: string;
@@ -107,29 +105,47 @@ export async function deleteSource(id: number): Promise<void> {
 	await fetch(`${API_BASE}/sources/${id}`, { method: 'DELETE' });
 }
 
-// Reports
-export async function getReports(): Promise<Report[]> {
-	const res = await fetch(`${API_BASE}/reports`);
+// Prompts
+export async function getPrompts(): Promise<Prompt[]> {
+	const res = await fetch(`${API_BASE}/prompts`);
 	return res.json();
 }
 
-export async function generateReport(start?: string, end?: string): Promise<Report> {
+export async function generatePrompt(start?: string, end?: string): Promise<Prompt> {
 	const searchParams = new URLSearchParams();
 	if (start) searchParams.set('start', start);
 	if (end) searchParams.set('end', end);
 
 	const query = searchParams.toString();
-	const url = `${API_BASE}/reports/generate${query ? `?${query}` : ''}`;
+	const url = `${API_BASE}/prompts/generate${query ? `?${query}` : ''}`;
 	const res = await fetch(url, { method: 'POST' });
 	return res.json();
 }
 
-export async function getReport(id: number): Promise<Report> {
-	const res = await fetch(`${API_BASE}/reports/${id}`);
+export async function getPrompt(id: number): Promise<Prompt> {
+	const res = await fetch(`${API_BASE}/prompts/${id}`);
 	return res.json();
 }
 
-export async function getReportPrompt(id: number): Promise<string> {
-	const res = await fetch(`${API_BASE}/reports/${id}/prompt`);
+export async function getPromptContent(id: number): Promise<string> {
+	const res = await fetch(`${API_BASE}/prompts/${id}/content`);
 	return res.text();
+}
+
+export async function createPrompt(data: {
+	opportunity_count: number;
+	content_prompt: string;
+}): Promise<Prompt> {
+	const res = await fetch(`${API_BASE}/prompts`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(data)
+	});
+	return res.json();
+}
+
+// Sources - Fetch
+export async function fetchSources(): Promise<{ status: string; message: string }> {
+	const res = await fetch(`${API_BASE}/sources/fetch`, { method: 'POST' });
+	return res.json();
 }

@@ -1,4 +1,4 @@
-module github.com/mx-seer/seer
+module github.com/mx-seer/seer-pro
 
 go 1.25.5
 

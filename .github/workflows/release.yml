@@ -1,0 +1,201 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: '1.23'
+  BUN_VERSION: '1.1'
+
+jobs:
+  build-pro:
+    name: Build Pro Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build frontend
+        run: |
+          cd web
+          bun install
+          bun run build
+
+      - name: Embed frontend
+        run: |
+          rm -rf internal/api/static/*
+          cp -r web/build/* internal/api/static/
+
+      - name: Build binaries
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          LDFLAGS="-s -w -X main.Version=${VERSION}"
+
+          mkdir -p dist
+
+          # Linux amd64
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags pro -ldflags "${LDFLAGS}" -o dist/seer-pro-${VERSION}-linux-amd64 ./cmd/seer
+
+          # Linux arm64
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -tags pro -ldflags "${LDFLAGS}" -o dist/seer-pro-${VERSION}-linux-arm64 ./cmd/seer
+
+          # macOS amd64 (Intel)
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags pro -ldflags "${LDFLAGS}" -o dist/seer-pro-${VERSION}-darwin-amd64 ./cmd/seer
+
+          # macOS arm64 (M-series)
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -tags pro -ldflags "${LDFLAGS}" -o dist/seer-pro-${VERSION}-darwin-arm64 ./cmd/seer
+
+          # Windows amd64
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -tags pro -ldflags "${LDFLAGS}" -o dist/seer-pro-${VERSION}-windows-amd64.exe ./cmd/seer
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pro-binaries
+          path: dist/
+
+  release-pro:
+    name: Create Pro Release
+    needs: build-pro
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pro-binaries
+          path: dist/
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Seer Pro ${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: ${{ contains(github.ref, '-') }}
+          generate_release_notes: true
+          files: |
+            dist/*
+
+  sync-and-tag-ce:
+    name: Sync to CE and Create Tag
+    needs: release-pro
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout seer-pro
+        uses: actions/checkout@v4
+        with:
+          path: seer-pro
+
+      - name: Checkout seer (CE)
+        uses: actions/checkout@v4
+        with:
+          repository: mx-seer/seer
+          token: ${{ secrets.SYNC_TOKEN }}
+          path: seer
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Sync files
+        run: |
+          cd seer
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cd ..
+
+          rsync -av --exclude='.git' \
+                    --exclude='internal/license/' \
+                    --exclude='internal/ai/' \
+                    --exclude='internal/alerts/' \
+                    --exclude='.github/workflows/sync-ce.yml' \
+                    --exclude='.github/workflows/release.yml' \
+                    --exclude='*_pro.go' \
+                    --exclude='*_stub.go' \
+                    seer-pro/ seer/
+
+          # Rename release-ce.yml to release.yml in CE repo
+          if [ -f seer/.github/workflows/release-ce.yml ]; then
+            mv seer/.github/workflows/release-ce.yml seer/.github/workflows/release.yml
+          fi
+
+      - name: Remove Pro-only files
+        run: |
+          cd seer
+
+          find . -name '*.go' -type f | while read file; do
+            if head -5 "$file" | grep -q "//go:build pro"; then
+              echo "Removing Pro-only file: $file"
+              rm "$file"
+            fi
+          done
+
+      - name: Replace seer-pro imports with seer
+        run: |
+          cd seer
+
+          sed -i 's|module github.com/mx-seer/seer-pro|module github.com/mx-seer/seer|g' go.mod
+          find . -name '*.go' -type f -exec sed -i 's|github.com/mx-seer/seer-pro/|github.com/mx-seer/seer/|g' {} +
+          sed -i 's|mx-seer/seer-pro|mx-seer/seer|g' README.md
+
+          if grep -r "github.com/mx-seer/seer-pro/" --include="*.go" .; then
+            echo "ERROR: seer-pro references still found in Go files!"
+            exit 1
+          fi
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Verify build
+        run: |
+          cd seer
+          go mod tidy
+          go build -o bin/seer ./cmd/seer
+          go test ./...
+
+      - name: Commit, push and tag
+        run: |
+          cd seer
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          git add -A
+
+          if git diff --staged --quiet; then
+            echo "No changes to sync"
+          else
+            git commit -m "Release ${VERSION}"
+          fi
+
+          git tag -a "${VERSION}" -m "Release ${VERSION}"
+          git push origin main --tags

@@ -1,2 +1,197 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* daisyUI 5.x Seer Theme */
+@plugin "daisyui/theme" {
+	name: "seer";
+	default: true;
+	prefersdark: true;
+	color-scheme: dark;
+
+	/* Primary - Purple 500 (#8B5CF6) */
+	--color-primary: oklch(58.97% 0.228 292.58);
+	--color-primary-content: oklch(100% 0 0);
+
+	/* Secondary - Zinc 400 (#A1A1AA) */
+	--color-secondary: oklch(68.45% 0.009 264.53);
+	--color-secondary-content: oklch(100% 0 0);
+
+	/* Accent - Purple 600 (#7C3AED) */
+	--color-accent: oklch(52.72% 0.257 293.05);
+	--color-accent-content: oklch(100% 0 0);
+
+	/* Neutral - Zinc 600 (#52525B) */
+	--color-neutral: oklch(44.65% 0.011 285.75);
+	--color-neutral-content: oklch(90% 0 0);
+
+	/* Base Colors */
+	--color-base-100: oklch(14.08% 0.004 285.82); /* #09090B */
+	--color-base-200: oklch(18.39% 0.006 285.82); /* #18181B */
+	--color-base-300: oklch(23.74% 0.006 285.82); /* #27272A */
+	--color-base-content: oklch(98.51% 0 0);       /* #FAFAFA */
+
+	/* State Colors */
+	--color-info: oklch(69.64% 0.176 293.54);
+	--color-info-content: oklch(100% 0 0);
+	--color-success: oklch(69.47% 0.17 162.48);
+	--color-success-content: oklch(100% 0 0);
+	--color-warning: oklch(79.52% 0.152 86.05);
+	--color-warning-content: oklch(20% 0 0);
+	--color-error: oklch(62.8% 0.257 29.23);
+	--color-error-content: oklch(100% 0 0);
+
+	/* Theme Settings */
+	--radius-selector: 1rem;
+	--radius-field: 0.5rem;
+	--radius-box: 0.75rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 1;
+	--noise: 0;
+}
+
+/* Tailwind Theme Extension */
+@theme {
+	--font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+	--font-display: 'Space Grotesk', sans-serif;
+
+	/* Seer custom colors */
+	--color-seer-bg: #09090B;
+	--color-seer-surface: #18181B;
+	--color-seer-elevated: #27272A;
+	--color-seer-border: #27272A;
+	--color-seer-border-hover: #3F3F46;
+}
+
+/* CSS Variables for non-Tailwind usage */
+:root {
+	--seer-bg: #09090B;
+	--seer-surface: #18181B;
+	--seer-elevated: #27272A;
+	--seer-border: #27272A;
+	--purple-500: #8B5CF6;
+}
+
+/* Base styles */
+html, body {
+	background-color: var(--seer-bg);
+	font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	min-height: 100vh;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* Navigation links */
+.nav-link {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0;
+	color: #A1A1AA;
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: color 0.2s ease;
+	border-bottom: 2px solid transparent;
+}
+
+.nav-link:hover {
+	color: #FAFAFA;
+}
+
+.nav-active {
+	color: #8B5CF6;
+	border-bottom-color: #8B5CF6;
+}
+
+/* Seer-specific utilities (not in daisyUI) */
+.top-accent {
+	background: linear-gradient(90deg, #7C3AED, #8B5CF6, #A78BFA);
+	height: 2px;
+	width: 100%;
+}
+
+.glow-purple {
+	box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+.card-hover:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 0 30px rgba(139, 92, 246, 0.2);
+}
+
+.logo-glow {
+	filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
+}
+
+/* Score badges (custom visual style) */
+.score-low {
+	background-color: #27272A;
+	color: #71717A;
+}
+
+.score-mid {
+	background-color: rgba(251, 191, 36, 0.15);
+	color: #FBBF24;
+	border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.score-high {
+	background-color: rgba(34, 197, 94, 0.15);
+	color: #22C55E;
+	border: 1px solid rgba(34, 197, 94, 0.3);
+	box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+}
+
+.score-elite {
+	background-color: rgba(251, 146, 60, 0.15);
+	color: #FB923C;
+	border: 1px solid rgba(251, 146, 60, 0.4);
+	box-shadow: 0 0 18px rgba(251, 146, 60, 0.4);
+}
+
+/* Source badge (purple pill) */
+.source-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.25rem 0.625rem;
+	background-color: rgba(139, 92, 246, 0.1);
+	border: 1px solid rgba(139, 92, 246, 0.3);
+	border-radius: 9999px;
+	color: #A78BFA;
+	font-size: 0.75rem;
+	font-weight: 500;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--seer-bg); }
+::-webkit-scrollbar-thumb { background: var(--seer-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #8B5CF6; }
+
+/* Range slider */
+input[type="range"] {
+	-webkit-appearance: none;
+	appearance: none;
+	background: #27272A;
+	height: 6px;
+	border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #8B5CF6;
+	cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #8B5CF6;
+	cursor: pointer;
+	border: none;
+}

@@ -1,1 +1,0 @@
-import{i as o,j as i,k as c,E as d,l as E,H as T,m as b,o as m,q as _}from"./ClognnWn.js";import{B as p}from"./CA64dHPF.js";function k(t,f,l=!1){i&&c();var e=new p(t),u=l?d:0;function n(a,r){if(i){const h=E(t)===T;if(a===h){var s=b();m(s),e.anchor=s,_(!1),e.ensure(a,r),_(!0);return}}e.ensure(a,r)}o(()=>{var a=!1;f((r,s=!0)=>{a=!0,n(s,r)}),a||n(!1,null)},u)}export{k as i};

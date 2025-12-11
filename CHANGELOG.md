@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial project structure
 - Configuration loader (YAML)
-- SQLite database with migrations
+- SQLite database with migrations and WAL mode
 - Chi router with health check endpoint
 - Docker support
+- SvelteKit frontend with Svelte 5, Tailwind CSS v4, daisyUI 5.x
+- Dashboard to view and manage opportunities
+- Manual refetch button to trigger source fetching on-demand
+- Configurable fetch interval via config file (default: 60 minutes)
+- Source manager with scheduled fetching (cron-based)
+- Sources: Hacker News, GitHub, npm, DEV.to
+- Multi-platform build support (Linux, macOS, Windows)

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mx-seer/seer/internal/db"
+	"github.com/mx-seer/seer-pro/internal/db"
 )
 
 func setupTestServer(t *testing.T) *Server {
@@ -25,7 +25,7 @@ func setupTestServer(t *testing.T) *Server {
 		database.Close()
 	})
 
-	return NewServer(database)
+	return NewServer(database, nil)
 }
 
 func TestHealthEndpoint(t *testing.T) {

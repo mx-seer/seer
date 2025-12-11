@@ -2,22 +2,32 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/mx-seer/seer/internal/api"
-	"github.com/mx-seer/seer/internal/config"
-	"github.com/mx-seer/seer/internal/db"
-	"github.com/mx-seer/seer/internal/sources"
+	"github.com/mx-seer/seer-pro/internal/api"
+	"github.com/mx-seer/seer-pro/internal/config"
+	"github.com/mx-seer/seer-pro/internal/db"
+	"github.com/mx-seer/seer-pro/internal/sources"
 )
+
+// Version is set at build time via -ldflags
+var Version = "dev"
 
 func main() {
 	// Parse command line flags
 	configPath := flag.String("config", "config.yaml", "path to config file")
+	showVersion := flag.Bool("version", false, "show version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("Seer %s\n", Version)
+		os.Exit(0)
+	}
 
 	// Load configuration
 	cfg, err := config.Load(*configPath)
@@ -25,7 +35,7 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	log.Printf("Starting Seer on %s", cfg.Address())
+	log.Printf("Starting Seer %s on %s", Version, cfg.Address())
 
 	// Initialize database
 	database, err := db.New(cfg.Database.Path)
@@ -37,14 +47,14 @@ func main() {
 	log.Println("Database initialized")
 
 	// Initialize source manager
-	sourceManager := sources.NewManager(database.DB)
+	sourceManager := sources.NewManager(database.DB, cfg.Sources.FetchInterval)
 	if err := sourceManager.Start(); err != nil {
 		log.Fatalf("Failed to start source manager: %v", err)
 	}
 	defer sourceManager.Stop()
 
 	// Create API server
-	server := api.NewServer(database)
+	server := api.NewServer(database, sourceManager)
 
 	// Start HTTP server
 	go func() {

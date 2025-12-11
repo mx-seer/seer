@@ -1,0 +1,104 @@
+name: Sync to CE
+
+on:
+  workflow_dispatch:  # Manual trigger only - automatic sync happens via release.yml on tags
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout seer-pro
+        uses: actions/checkout@v4
+        with:
+          path: seer-pro
+
+      - name: Checkout seer (CE)
+        uses: actions/checkout@v4
+        with:
+          repository: mx-seer/seer
+          token: ${{ secrets.SYNC_TOKEN }}
+          path: seer
+
+      - name: Sync files
+        run: |
+          # Clean seer directory (keep .git)
+          cd seer
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cd ..
+
+          # Copy all files from seer-pro (except .git and pro-only files)
+          rsync -av --exclude='.git' \
+                    --exclude='internal/license/' \
+                    --exclude='internal/ai/' \
+                    --exclude='internal/alerts/' \
+                    --exclude='.github/workflows/sync-ce.yml' \
+                    --exclude='.github/workflows/release.yml' \
+                    --exclude='*_pro.go' \
+                    --exclude='*_stub.go' \
+                    seer-pro/ seer/
+
+          # Rename release-ce.yml to release.yml in CE repo
+          if [ -f seer/.github/workflows/release-ce.yml ]; then
+            mv seer/.github/workflows/release-ce.yml seer/.github/workflows/release.yml
+          fi
+
+      - name: Remove Pro-only files
+        run: |
+          cd seer
+
+          # Remove files with //go:build pro tag
+          # These are Pro-only implementations that shouldn't be in CE
+          find . -name '*.go' -type f | while read file; do
+            if head -5 "$file" | grep -q "//go:build pro"; then
+              echo "Removing Pro-only file: $file"
+              rm "$file"
+            fi
+          done
+
+      - name: Replace seer-pro imports with seer
+        run: |
+          cd seer
+
+          # Update go.mod module name
+          sed -i 's|module github.com/mx-seer/seer-pro|module github.com/mx-seer/seer|g' go.mod
+
+          # Update all Go imports
+          find . -name '*.go' -type f -exec sed -i 's|github.com/mx-seer/seer-pro/|github.com/mx-seer/seer/|g' {} +
+
+          # Update README references
+          sed -i 's|mx-seer/seer-pro|mx-seer/seer|g' README.md
+
+          # Verify no seer-pro references remain in Go files
+          if grep -r "github.com/mx-seer/seer-pro/" --include="*.go" .; then
+            echo "ERROR: seer-pro references still found in Go files!"
+            exit 1
+          fi
+
+          echo "Import replacement complete"
+
+      - name: Verify build
+        run: |
+          cd seer
+          go mod tidy
+          go build -o bin/seer ./cmd/seer
+          go test ./...
+
+      - name: Commit and push
+        run: |
+          cd seer
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          git add -A
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to sync"
+            exit 0
+          fi
+
+          # Get the last commit message from seer-pro
+          COMMIT_MSG=$(cd ../seer-pro && git log -1 --format="%s")
+
+          git commit -m "Sync: $COMMIT_MSG"
+          git push

@@ -122,10 +122,8 @@ func (h *HackerNews) search(ctx context.Context, query string) ([]hnHit, error) 
 }
 
 func (h *HackerNews) hitToOpportunity(hit hnHit) Opportunity {
-	sourceURL := hit.URL
-	if sourceURL == "" {
-		sourceURL = hnBaseURL + hit.ObjectID
-	}
+	// Always use HN discussion URL so users go to where the topic is being discussed
+	sourceURL := hnBaseURL + hit.ObjectID
 
 	description := hit.StoryText
 	if description == "" && hit.URL != "" {

@@ -8,7 +8,6 @@
 
 - You control your data
 - You choose where it runs
-- You decide which AI to use
 
 ## Quick Start
 
@@ -35,7 +34,27 @@ Copy the example configuration:
 cp config.example.yaml config.yaml
 ```
 
-Edit `config.yaml` to customize your settings.
+### Configuration Options
+
+```yaml
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+database:
+  path: "./data/seer.db"
+
+# Sources configuration
+sources:
+  fetch_interval: 60  # Interval in minutes between source fetches (default: 60)
+```
+
+## Features
+
+- **Dashboard** - View and manage detected opportunities
+- **Manual Refetch** - Trigger source fetching on-demand via dashboard
+- **Configurable Fetch Interval** - Set how often sources are checked (default: every hour)
+- **SQLite Database** - Lightweight, self-contained data storage with WAL mode
 
 ## Development
 
@@ -47,17 +66,14 @@ Edit `config.yaml` to customize your settings.
 ### Commands
 
 ```bash
-# Run in development mode
+# Run in development mode (frontend + backend)
 make dev
 
 # Run Go server only
 make dev-server
 
-# Build CE binary
-make build-ce
-
-# Build Pro binary
-make build-pro
+# Build binary
+make build
 
 # Run tests
 make test
@@ -70,29 +86,19 @@ make clean
 
 Seer monitors multiple sources for opportunities:
 
-| Source | Description | CE | Pro |
-|--------|-------------|-----|-----|
-| Hacker News | Algolia API | Yes | Yes |
-| GitHub | Trending/Issues | Yes | Yes |
-| npm | New packages | Yes | Yes |
-| DEV.to | Articles | Yes | Yes |
-| RSS | Custom feeds | Max 2 | Unlimited |
-| Reddit | Subreddits | No | Yes |
-| Twitter/X | Keywords | No | Yes |
-| Custom API | JSON endpoint | No | Yes |
+| Source | Description |
+|--------|-------------|
+| Hacker News | Algolia API |
+| GitHub | Trending/Issues |
+| npm | New packages |
+| DEV.to | Articles |
 
-## AI Providers (Pro)
+## Tech Stack
 
-| Provider | Type | Notes |
-|----------|------|-------|
-| Ollama | Local | Free, private |
-| OpenAI | Cloud | GPT-4, GPT-3.5 |
-| Anthropic | Cloud | Claude |
-| DeepSeek | Cloud | Cheap, good for code |
-| Groq | Cloud | Fast, rate limited |
-| Google AI | Cloud | Gemini |
-| Mistral | Cloud | European, privacy |
-| OpenRouter | Cloud | Multi-provider gateway |
+- **Backend**: Go 1.23+ with chi router
+- **Frontend**: SvelteKit with Svelte 5, Tailwind CSS v4, daisyUI 5.x
+- **Database**: SQLite with WAL mode
+- **Build**: Makefile with embedded frontend
 
 ## License
 
@@ -101,4 +107,4 @@ See [LICENSE](LICENSE) file.
 ## Support
 
 - Email: seer@mendex.io
-- Issues: [GitHub Issues](https://github.com/mx-seer/seer-ce/issues)
+- Issues: [GitHub Issues](https://github.com/mx-seer/seer-pro/issues)

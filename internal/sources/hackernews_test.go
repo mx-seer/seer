@@ -80,8 +80,9 @@ func TestHackerNews_Fetch(t *testing.T) {
 		t.Errorf("expected source ID 123, got %s", opp.SourceIDExternal)
 	}
 
-	if opp.SourceURL != "https://example.com" {
-		t.Errorf("expected source URL https://example.com, got %s", opp.SourceURL)
+	expectedURL := "https://news.ycombinator.com/item?id=123"
+	if opp.SourceURL != expectedURL {
+		t.Errorf("expected source URL %s, got %s", expectedURL, opp.SourceURL)
 	}
 
 	if opp.Metadata["author"] != "tester" {

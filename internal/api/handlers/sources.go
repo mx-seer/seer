@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mx-seer/seer/internal/sources"
+	"github.com/mx-seer/seer-pro/internal/sources"
 )
 
 // SourceResponse represents a source in API responses
@@ -121,26 +121,9 @@ func (h *SourcesHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check RSS limit for CE
-	if req.Type == "rss" {
-		maxFeeds := sources.MaxRSSFeeds()
-		if maxFeeds > 0 {
-			count, _ := h.repo.CountByType("rss")
-			if count >= maxFeeds {
-				http.Error(w, "RSS feed limit reached (upgrade to Pro for unlimited)", http.StatusForbidden)
-				return
-			}
-		}
-	}
-
 	// Validate required fields
 	if req.Name == "" {
 		http.Error(w, "Name is required", http.StatusBadRequest)
-		return
-	}
-
-	if req.Type == "rss" && req.URL == "" {
-		http.Error(w, "URL is required for RSS sources", http.StatusBadRequest)
 		return
 	}
 
@@ -315,13 +298,9 @@ func (h *SourcesHandler) AvailableTypes(w http.ResponseWriter, r *http.Request) 
 	types := sources.GetAvailableTypes()
 
 	response := struct {
-		Types      []string `json:"types"`
-		IsPro      bool     `json:"is_pro"`
-		MaxRSS     int      `json:"max_rss"`
+		Types []string `json:"types"`
 	}{
-		Types:  types,
-		IsPro:  sources.IsPro(),
-		MaxRSS: sources.MaxRSSFeeds(),
+		Types: types,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -49,7 +49,7 @@ func (h *OpportunitiesHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	limit := 50
 	if limitStr != "" {
-		if v, err := strconv.Atoi(limitStr); err == nil && v > 0 && v <= 100 {
+		if v, err := strconv.Atoi(limitStr); err == nil && v > 0 && v <= 1000 {
 			limit = v
 		}
 	}

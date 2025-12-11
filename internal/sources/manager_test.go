@@ -64,7 +64,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 
 func TestManager_RegisterFactory(t *testing.T) {
 	db := setupTestDB(t)
-	m := NewManager(db)
+	m := NewManager(db, 60)
 
 	// Check default factories are registered
 	if _, ok := m.factories["hackernews"]; !ok {
@@ -79,14 +79,11 @@ func TestManager_RegisterFactory(t *testing.T) {
 	if _, ok := m.factories["devto"]; !ok {
 		t.Error("devto factory not registered")
 	}
-	if _, ok := m.factories["rss"]; !ok {
-		t.Error("rss factory not registered")
-	}
 }
 
 func TestManager_SeedSources(t *testing.T) {
 	db := setupTestDB(t)
-	m := NewManager(db)
+	m := NewManager(db, 60)
 
 	// Seed sources
 	if err := m.repo.Seed(); err != nil {
@@ -125,7 +122,7 @@ func TestManager_SeedSources(t *testing.T) {
 
 func TestManager_SeedIdempotent(t *testing.T) {
 	db := setupTestDB(t)
-	m := NewManager(db)
+	m := NewManager(db, 60)
 
 	// Seed twice
 	if err := m.repo.Seed(); err != nil {
@@ -148,7 +145,7 @@ func TestManager_SeedIdempotent(t *testing.T) {
 
 func TestManager_StartStop(t *testing.T) {
 	db := setupTestDB(t)
-	m := NewManager(db)
+	m := NewManager(db, 60)
 
 	// Start
 	if err := m.Start(); err != nil {
@@ -169,7 +166,7 @@ func TestManager_StartStop(t *testing.T) {
 
 func TestManager_SaveOpportunity(t *testing.T) {
 	db := setupTestDB(t)
-	m := NewManager(db)
+	m := NewManager(db, 60)
 
 	// Seed to get a source
 	if err := m.repo.Seed(); err != nil {
@@ -207,7 +204,7 @@ func TestManager_SaveOpportunity(t *testing.T) {
 
 func TestManager_FetchAll_EmptySources(t *testing.T) {
 	db := setupTestDB(t)
-	m := NewManager(db)
+	m := NewManager(db, 60)
 
 	// Don't seed - no sources
 	err := m.FetchAll(context.Background())

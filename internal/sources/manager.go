@@ -8,26 +8,35 @@ import (
 	"log"
 	"sync"
 
+	"github.com/mx-seer/seer-pro/internal/scoring"
 	"github.com/robfig/cron/v3"
 )
 
 // Manager coordinates source fetching and scheduling
 type Manager struct {
-	db         *sql.DB
-	repo       *Repository
-	cron       *cron.Cron
-	factories  map[string]SourceFactory
-	mu         sync.RWMutex
-	isRunning  bool
+	db            *sql.DB
+	repo          *Repository
+	cron          *cron.Cron
+	factories     map[string]SourceFactory
+	scorer        *scoring.Scorer
+	mu            sync.RWMutex
+	isRunning     bool
+	fetchInterval int // Interval in minutes between fetches
 }
 
 // NewManager creates a new source manager
-func NewManager(db *sql.DB) *Manager {
+// fetchIntervalMinutes is the interval in minutes between fetches (default: 60)
+func NewManager(db *sql.DB, fetchIntervalMinutes int) *Manager {
+	if fetchIntervalMinutes <= 0 {
+		fetchIntervalMinutes = 60 // Default to 1 hour
+	}
 	m := &Manager{
-		db:        db,
-		repo:      NewRepository(db),
-		cron:      cron.New(),
-		factories: make(map[string]SourceFactory),
+		db:            db,
+		repo:          NewRepository(db),
+		cron:          cron.New(),
+		factories:     make(map[string]SourceFactory),
+		scorer:        scoring.New(),
+		fetchInterval: fetchIntervalMinutes,
 	}
 
 	// Register default factories
@@ -35,7 +44,6 @@ func NewManager(db *sql.DB) *Manager {
 	m.RegisterFactory("github", NewGitHub)
 	m.RegisterFactory("npm", NewNPM)
 	m.RegisterFactory("devto", NewDevTo)
-	m.RegisterFactory("rss", NewRSS)
 
 	return m
 }
@@ -61,12 +69,14 @@ func (m *Manager) Start() error {
 		return fmt.Errorf("failed to seed sources: %w", err)
 	}
 
-	// Schedule fetching every hour
-	_, err := m.cron.AddFunc("0 * * * *", func() {
+	// Schedule fetching at configured interval
+	cronExpr := fmt.Sprintf("@every %dm", m.fetchInterval)
+	_, err := m.cron.AddFunc(cronExpr, func() {
 		if err := m.FetchAll(context.Background()); err != nil {
 			log.Printf("Error fetching sources: %v", err)
 		}
 	})
+	log.Printf("Source fetch scheduled every %d minutes", m.fetchInterval)
 	if err != nil {
 		return fmt.Errorf("failed to schedule fetch job: %w", err)
 	}
@@ -175,25 +185,41 @@ func (m *Manager) fetchSource(ctx context.Context, record SourceRecord) error {
 
 // saveOpportunity saves an opportunity to the database
 func (m *Manager) saveOpportunity(sourceID int64, opp Opportunity) error {
-	signalsJSON, _ := json.Marshal([]string{}) // Empty for now, will be filled by scoring
-	metadataJSON, _ := json.Marshal(opp.Metadata)
+	// Convert to scoring.Opportunity for scoring
+	scoringOpp := scoring.Opportunity{
+		Title:       opp.Title,
+		Description: opp.Description,
+		SourceType:  opp.SourceType,
+		DetectedAt:  opp.DetectedAt,
+		Metadata:    opp.Metadata,
+	}
+
+	// Calculate score
+	result := m.scorer.Score(scoringOpp)
+
+	// Get matched signal names
+	matchedSignals := result.GetMatchedSignals()
+	signalNames := make([]string, len(matchedSignals))
+	for i, sig := range matchedSignals {
+		signalNames[i] = sig.Name
+	}
+	signalsJSON, _ := json.Marshal(signalNames)
 
 	_, err := m.db.Exec(`
-		INSERT INTO opportunities (source_id, title, description, source, source_url, source_id_external, signals, detected_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO opportunities (source_id, title, description, source, source_url, source_id_external, score, signals, detected_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(source, source_id_external) DO UPDATE SET
 			title = excluded.title,
 			description = excluded.description,
 			source_url = excluded.source_url,
+			score = excluded.score,
+			signals = excluded.signals,
 			detected_at = excluded.detected_at
-	`, sourceID, opp.Title, opp.Description, opp.SourceType, opp.SourceURL, opp.SourceIDExternal, string(signalsJSON), opp.DetectedAt)
+	`, sourceID, opp.Title, opp.Description, opp.SourceType, opp.SourceURL, opp.SourceIDExternal, result.Score, string(signalsJSON), opp.DetectedAt)
 
 	if err != nil {
 		return fmt.Errorf("failed to insert opportunity: %w", err)
 	}
-
-	// Store metadata in a separate update if needed
-	_ = metadataJSON // TODO: Consider storing metadata
 
 	return nil
 }

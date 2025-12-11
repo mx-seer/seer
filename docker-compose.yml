@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   seer:
     build: .
@@ -9,13 +7,3 @@ services:
       - ./data:/app/data
       - ./config.yaml:/app/config.yaml
     restart: unless-stopped
-
-  ollama:
-    image: ollama/ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
-volumes:
-  ollama_data:
