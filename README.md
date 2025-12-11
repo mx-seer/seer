@@ -26,6 +26,20 @@ docker-compose up
 
 Visit `http://localhost:8080` to access the dashboard.
 
+### Downloads
+
+Download the latest binary for your platform:
+
+| Platform | Architecture | Download |
+|----------|--------------|----------|
+| Linux | x64 | [seer-linux-amd64](https://github.com/mx-seer/seer/releases/latest/download/seer-linux-amd64) |
+| Linux | ARM64 | [seer-linux-arm64](https://github.com/mx-seer/seer/releases/latest/download/seer-linux-arm64) |
+| macOS | Intel | [seer-darwin-amd64](https://github.com/mx-seer/seer/releases/latest/download/seer-darwin-amd64) |
+| macOS | Apple Silicon | [seer-darwin-arm64](https://github.com/mx-seer/seer/releases/latest/download/seer-darwin-arm64) |
+| Windows | x64 | [seer-windows-amd64.exe](https://github.com/mx-seer/seer/releases/latest/download/seer-windows-amd64.exe) |
+
+Or visit the [Releases page](https://github.com/mx-seer/seer/releases) for all versions.
+
 ## Configuration
 
 Copy the example configuration:
