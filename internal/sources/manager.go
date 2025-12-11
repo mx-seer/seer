@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/mx-seer/seer-pro/internal/scoring"
 	"github.com/robfig/cron/v3"
@@ -205,6 +206,9 @@ func (m *Manager) saveOpportunity(sourceID int64, opp Opportunity) error {
 	}
 	signalsJSON, _ := json.Marshal(signalNames)
 
+	// Format detected_at for SQLite compatibility (RFC3339 format)
+	detectedAt := opp.DetectedAt.UTC().Format(time.RFC3339)
+
 	_, err := m.db.Exec(`
 		INSERT INTO opportunities (source_id, title, description, source, source_url, source_id_external, score, signals, detected_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -215,7 +219,7 @@ func (m *Manager) saveOpportunity(sourceID int64, opp Opportunity) error {
 			score = excluded.score,
 			signals = excluded.signals,
 			detected_at = excluded.detected_at
-	`, sourceID, opp.Title, opp.Description, opp.SourceType, opp.SourceURL, opp.SourceIDExternal, result.Score, string(signalsJSON), opp.DetectedAt)
+	`, sourceID, opp.Title, opp.Description, opp.SourceType, opp.SourceURL, opp.SourceIDExternal, result.Score, string(signalsJSON), detectedAt)
 
 	if err != nil {
 		return fmt.Errorf("failed to insert opportunity: %w", err)
