@@ -125,7 +125,7 @@
 					<a href="https://mendex.io" class="text-purple-400 hover:text-purple-300 transition-colors text-sm">Mendex</a>
 				</div>
 				<div class="text-zinc-600 text-sm">
-					v0.1.0
+					v0.2.0
 				</div>
 			</div>
 		</div>

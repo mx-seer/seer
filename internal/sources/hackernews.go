@@ -57,13 +57,55 @@ func (h *HackerNews) Name() string {
 
 // Fetch retrieves recent opportunities from Hacker News
 func (h *HackerNews) Fetch(ctx context.Context) ([]Opportunity, error) {
-	// Search for "Show HN", "Ask HN", and stories with high engagement
+	// Optimized queries to detect market opportunities
 	queries := []string{
-		"Show HN",
-		"Ask HN",
+		// Direct opportunities - people stating needs
+		"I wish",
+		"I need",
 		"looking for",
-		"need help",
-		"feedback",
+		"searching for",
+
+		// Pain points - frustration signals
+		"frustrated with",
+		"annoyed by",
+		"hate using",
+		"problem with",
+		"issue with",
+		"struggle with",
+
+		// Requests for alternatives
+		"alternative to",
+		"replacement for",
+		"instead of",
+		"better than",
+		"competitor to",
+
+		// Validation signals - willingness to pay
+		"would pay for",
+		"shut up and take my money",
+		"take my money",
+		"happy to pay",
+
+		// Discovery requests
+		"what do you use for",
+		"how do you handle",
+		"recommend a",
+		"suggest a",
+		"does anyone know",
+		"is there a",
+		"why isn't there",
+
+		// Build signals
+		"someone should build",
+		"why hasn't anyone",
+		"idea for a startup",
+		"business idea",
+
+		// Show HN - new launches to analyze
+		"Show HN",
+
+		// Ask HN - direct questions with opportunities
+		"Ask HN",
 	}
 
 	seen := make(map[string]bool)

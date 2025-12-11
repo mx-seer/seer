@@ -60,11 +60,44 @@ func (g *GitHub) Name() string {
 
 // Fetch retrieves trending repositories from GitHub
 func (g *GitHub) Fetch(ctx context.Context) ([]Opportunity, error) {
-	// Search for recently created repos with good engagement
+	// All queries filter by pushed date (last 7 days)
+	dateFilter := " pushed:>" + time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+
+	// Optimized queries for opportunity detection
 	queries := []string{
-		"stars:>10 created:>" + time.Now().Add(-7*24*time.Hour).Format("2006-01-02"),
-		"help wanted good first issue",
-		"looking for contributors",
+		// Trending new repos with traction
+		"stars:>50 created:>" + time.Now().AddDate(0, 0, -7).Format("2006-01-02"),
+		"stars:>10" + dateFilter,
+
+		// Repos seeking contributors
+		"\"help wanted\"" + dateFilter,
+		"\"good first issue\"" + dateFilter,
+		"\"looking for contributors\"" + dateFilter,
+		"\"contributors welcome\"" + dateFilter,
+		"\"seeking maintainers\"" + dateFilter,
+
+		// Self-hosted alternatives (hot market)
+		"\"self-hosted\"" + dateFilter,
+		"\"self hosted\"" + dateFilter,
+		"\"selfhosted\"" + dateFilter,
+		"\"alternative to\"" + dateFilter,
+		"\"open source alternative\"" + dateFilter,
+
+		// Developer tools
+		"\"developer tool\"" + dateFilter,
+		"\"dev tool\"" + dateFilter,
+		"\"cli tool\"" + dateFilter,
+		"\"command line\"" + dateFilter,
+
+		// Boilerplates and starters (competition analysis)
+		"\"boilerplate\"" + dateFilter,
+		"\"starter template\"" + dateFilter,
+		"\"starter kit\"" + dateFilter,
+
+		// Specific tech stacks (for Mendex relevance)
+		"\"svelte\" \"self-hosted\"" + dateFilter,
+		"\"golang\" \"self-hosted\"" + dateFilter,
+		"\"nuxt\" stars:>5" + dateFilter,
 	}
 
 	seen := make(map[int64]bool)

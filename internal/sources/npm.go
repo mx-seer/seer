@@ -76,16 +76,57 @@ func (n *NPM) Name() string {
 
 // Fetch retrieves new packages from npm
 func (n *NPM) Fetch(ctx context.Context) ([]Opportunity, error) {
-	// Search for new and interesting packages
+	// Optimized queries for opportunity detection
 	queries := []string{
-		"not:deprecated",
-		"cli tool",
-		"framework",
-		"api",
+		// Developer tools
+		"cli",
+		"devtool",
+		"developer tool",
+		"dev tool",
+
+		// Self-hosted / alternatives
+		"self-hosted",
+		"selfhosted",
+		"alternative",
+		"open source",
+
+		// Starters and templates
+		"boilerplate",
+		"starter",
+		"template",
+		"scaffold",
+		"generator",
+
+		// API/SDK (competition)
+		"sdk",
+		"api client",
+		"wrapper",
+
+		// Specific ecosystems
+		"svelte",
+		"nuxt",
+		"vite plugin",
+		"elysia",
+		"hono",
+		"bun",
+
+		// Utilities
+		"logger",
+		"validation",
+		"auth",
+		"database",
+
+		// Trending categories
+		"ai",
+		"llm",
+		"openai",
+		"markdown",
+		"pdf",
 	}
 
 	seen := make(map[string]bool)
 	var opportunities []Opportunity
+	cutoff := time.Now().AddDate(0, 0, -14) // Only packages from last 14 days
 
 	for _, query := range queries {
 		packages, err := n.search(ctx, query)
@@ -95,6 +136,10 @@ func (n *NPM) Fetch(ctx context.Context) ([]Opportunity, error) {
 
 		for _, pkg := range packages {
 			if seen[pkg.Package.Name] {
+				continue
+			}
+			// Filter by date: only keep packages updated in last 30 days
+			if pkg.Package.Date.Before(cutoff) {
 				continue
 			}
 			seen[pkg.Package.Name] = true
@@ -110,10 +155,11 @@ func (n *NPM) Fetch(ctx context.Context) ([]Opportunity, error) {
 func (n *NPM) search(ctx context.Context, query string) ([]npmObject, error) {
 	params := url.Values{}
 	params.Set("text", query)
-	params.Set("size", "20")
-	params.Set("quality", "0.5")
-	params.Set("popularity", "0.5")
-	params.Set("maintenance", "0.5")
+	params.Set("size", "25")
+	// Boost maintenance to favor actively maintained packages
+	params.Set("quality", "0.3")
+	params.Set("popularity", "0.3")
+	params.Set("maintenance", "0.4")
 
 	reqURL := npmRegistryAPI + "?" + params.Encode()
 
