@@ -121,11 +121,10 @@
 						</g>
 					</svg>
 					<span class="font-display text-sm font-semibold text-zinc-300">Seer</span>
-					<span class="text-zinc-500 text-sm">by</span>
-					<a href="https://mendex.io" class="text-purple-400 hover:text-purple-300 transition-colors text-sm">Mendex</a>
+					<span class="text-zinc-600 text-sm">v0.2.0</span>
 				</div>
-				<div class="text-zinc-600 text-sm">
-					v0.2.0
+				<div class="text-zinc-500 text-sm">
+					Built with 💜 by <a href="https://mendex.io" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:text-purple-300 transition-colors">Mendex</a>
 				</div>
 			</div>
 		</div>
