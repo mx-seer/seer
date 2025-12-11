@@ -71,8 +71,17 @@ export async function getOpportunity(id: number): Promise<Opportunity> {
 	return res.json();
 }
 
-export async function getStats(): Promise<Stats> {
-	const res = await fetch(`${API_BASE}/opportunities/stats`);
+export async function getStats(params?: {
+	source?: string;
+	min_score?: number;
+}): Promise<Stats> {
+	const searchParams = new URLSearchParams();
+	if (params?.source) searchParams.set('source', params.source);
+	if (params?.min_score) searchParams.set('min_score', params.min_score.toString());
+
+	const query = searchParams.toString();
+	const url = `${API_BASE}/opportunities/stats${query ? `?${query}` : ''}`;
+	const res = await fetch(url);
 	return res.json();
 }
 

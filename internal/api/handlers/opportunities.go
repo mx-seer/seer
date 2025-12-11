@@ -164,6 +164,17 @@ func (h *OpportunitiesHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 // Stats returns opportunity statistics
 func (h *OpportunitiesHandler) Stats(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters for filtering
+	sourceType := r.URL.Query().Get("source")
+	minScoreStr := r.URL.Query().Get("min_score")
+
+	minScore := 0
+	if minScoreStr != "" {
+		if v, err := strconv.Atoi(minScoreStr); err == nil {
+			minScore = v
+		}
+	}
+
 	stats := struct {
 		Total        int            `json:"total"`
 		BySource     map[string]int `json:"by_source"`
@@ -173,17 +184,28 @@ func (h *OpportunitiesHandler) Stats(w http.ResponseWriter, r *http.Request) {
 		BySource: make(map[string]int),
 	}
 
-	// Total count
-	h.db.QueryRow("SELECT COUNT(*) FROM opportunities").Scan(&stats.Total)
+	// Build WHERE clause
+	whereClause := "WHERE score >= ?"
+	args := []any{minScore}
 
-	// Average score
-	h.db.QueryRow("SELECT COALESCE(AVG(score), 0) FROM opportunities").Scan(&stats.AverageScore)
+	if sourceType != "" {
+		whereClause += " AND source = ?"
+		args = append(args, sourceType)
+	}
 
-	// Today count
-	h.db.QueryRow("SELECT COUNT(*) FROM opportunities WHERE DATE(detected_at) = DATE('now')").Scan(&stats.Today)
+	// Total count (filtered)
+	h.db.QueryRow("SELECT COUNT(*) FROM opportunities "+whereClause, args...).Scan(&stats.Total)
 
-	// By source
-	rows, err := h.db.Query("SELECT source, COUNT(*) FROM opportunities GROUP BY source")
+	// Average score (filtered)
+	h.db.QueryRow("SELECT COALESCE(AVG(score), 0) FROM opportunities "+whereClause, args...).Scan(&stats.AverageScore)
+
+	// Today count (filtered)
+	todayArgs := append(args, args...)
+	h.db.QueryRow("SELECT COUNT(*) FROM opportunities "+whereClause+" AND DATE(detected_at) = DATE('now')", args...).Scan(&stats.Today)
+	_ = todayArgs // unused, just for clarity
+
+	// By source (filtered)
+	rows, err := h.db.Query("SELECT source, COUNT(*) FROM opportunities "+whereClause+" GROUP BY source", args...)
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {

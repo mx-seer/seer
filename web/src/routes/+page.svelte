@@ -51,7 +51,10 @@
 					min_score: minScore || undefined,
 					limit: 500 // Load more for client-side sorting/pagination
 				}),
-				getStats(),
+				getStats({
+					source: selectedSource || undefined,
+					min_score: minScore || undefined
+				}),
 				getSources()
 			]);
 			opportunities = opps;
