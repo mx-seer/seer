@@ -9,10 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mx-seer/seer-pro/internal/api"
-	"github.com/mx-seer/seer-pro/internal/config"
-	"github.com/mx-seer/seer-pro/internal/db"
-	"github.com/mx-seer/seer-pro/internal/sources"
+	"github.com/mx-seer/seer/internal/api"
+	"github.com/mx-seer/seer/internal/config"
+	"github.com/mx-seer/seer/internal/db"
+	"github.com/mx-seer/seer/internal/sources"
 )
 
 // Version is set at build time via -ldflags

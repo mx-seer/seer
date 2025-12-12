@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mx-seer/seer-pro/internal/sources"
+	"github.com/mx-seer/seer/internal/sources"
 )
 
 // SourceResponse represents a source in API responses

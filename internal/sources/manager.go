@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mx-seer/seer-pro/internal/scoring"
+	"github.com/mx-seer/seer/internal/scoring"
 	"github.com/robfig/cron/v3"
 )
 

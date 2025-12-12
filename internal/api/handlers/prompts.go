@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mx-seer/seer-pro/internal/report"
+	"github.com/mx-seer/seer/internal/report"
 )
 
 // PromptResponse represents a prompt in API responses

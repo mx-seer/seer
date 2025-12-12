@@ -1,5 +1,3 @@
-//go:build !pro
-
 package sources
 
 import (
@@ -9,7 +7,7 @@ import (
 func TestGetAvailableTypes(t *testing.T) {
 	types := GetAvailableTypes()
 
-	expected := []string{"hackernews", "github", "npm", "devto"}
+	expected := []string{"hackernews", "github", "npm", "devto", "reddit", "twitter", "custom"}
 	if len(types) != len(expected) {
 		t.Errorf("expected %d types, got %d", len(expected), len(types))
 	}

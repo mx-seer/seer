@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/mx-seer/seer-pro/internal/api/handlers"
-	"github.com/mx-seer/seer-pro/internal/db"
-	"github.com/mx-seer/seer-pro/internal/sources"
+	"github.com/mx-seer/seer/internal/api/handlers"
+	"github.com/mx-seer/seer/internal/db"
+	"github.com/mx-seer/seer/internal/sources"
 )
 
 // Server holds the HTTP server dependencies

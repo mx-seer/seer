@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mx-seer/seer-pro/internal/db"
+	"github.com/mx-seer/seer/internal/db"
 )
 
 func setupTestServer(t *testing.T) *Server {

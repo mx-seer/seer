@@ -1,5 +1,3 @@
-//go:build pro
-
 package sources
 
 import (
