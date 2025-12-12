@@ -199,10 +199,8 @@ func (h *OpportunitiesHandler) Stats(w http.ResponseWriter, r *http.Request) {
 	// Average score (filtered)
 	h.db.QueryRow("SELECT COALESCE(AVG(score), 0) FROM opportunities "+whereClause, args...).Scan(&stats.AverageScore)
 
-	// Today count (filtered)
-	todayArgs := append(args, args...)
-	h.db.QueryRow("SELECT COUNT(*) FROM opportunities "+whereClause+" AND DATE(detected_at) = DATE('now')", args...).Scan(&stats.Today)
-	_ = todayArgs // unused, just for clarity
+	// Today count (filtered) - opportunities detected in last 24 hours
+	h.db.QueryRow("SELECT COUNT(*) FROM opportunities "+whereClause+" AND detected_at >= datetime('now', '-24 hours')", args...).Scan(&stats.Today)
 
 	// By source (filtered)
 	rows, err := h.db.Query("SELECT source, COUNT(*) FROM opportunities "+whereClause+" GROUP BY source", args...)

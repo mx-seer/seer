@@ -349,16 +349,16 @@ Please provide a detailed analysis focusing on actionable insights for an indie 
 				</div>
 			</div>
 
-			<!-- Today -->
+			<!-- Last 24h -->
 			<div class="bg-seer-surface border border-seer-border rounded-lg p-6 card-hover">
 				<div class="flex items-center gap-3 mb-3">
 					<div class="p-2 rounded-lg bg-purple-500/10">
 						<svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/>
-							<path d="M16 2v4M8 2v4M3 10h18" stroke-width="2" stroke-linecap="round"/>
+							<circle cx="12" cy="12" r="10" stroke-width="2"/>
+							<path d="M12 6v6l4 2" stroke-width="2" stroke-linecap="round"/>
 						</svg>
 					</div>
-					<span class="text-zinc-400 text-sm font-medium">Today</span>
+					<span class="text-zinc-400 text-sm font-medium">Last 24h</span>
 				</div>
 				<div class="flex items-end justify-between">
 					<span class="text-4xl font-bold text-white tabular-nums">{stats.today}</span>
@@ -442,7 +442,7 @@ Please provide a detailed analysis focusing on actionable insights for an indie 
 
 			<!-- Source Dropdown -->
 			<div class="flex items-center gap-2">
-				<label for="source-filter" class="text-zinc-500 text-sm">Source</label>
+				<label for="source-filter" class="text-zinc-500 text-sm">Sources</label>
 				<select
 					id="source-filter"
 					class="bg-seer-elevated border border-seer-border rounded-lg px-3 py-2 text-sm text-white cursor-pointer focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
@@ -450,11 +450,9 @@ Please provide a detailed analysis focusing on actionable insights for an indie 
 					onchange={loadData}
 				>
 					<option value="">All Sources</option>
-					{#if stats}
-						{#each Object.keys(stats.by_source) as source}
-							<option value={source}>{source}</option>
-						{/each}
-					{/if}
+					{#each sources.filter(s => s.enabled) as source}
+						<option value={source.type}>{source.name}</option>
+					{/each}
 				</select>
 			</div>
 
