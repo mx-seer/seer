@@ -17,6 +17,11 @@
   <img src="https://img.shields.io/github/issues/mx-seer/seer" alt="Issues">
 </p>
 
+<p align="center">
+  <a href="https://github.com/sponsors/mendexio"><img src="https://img.shields.io/badge/Sponsor-Mendex-EA4AAA?logo=github-sponsors" alt="Sponsor"></a>
+  <a href="https://ko-fi.com/mendexio"><img src="https://img.shields.io/badge/Ko--fi-Support_My_Work-FF5E5B?logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
+</p>
+
 ---
 
 ## What is Seer?
