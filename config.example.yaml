@@ -7,3 +7,21 @@ database:
 
 # sources:
 #   fetch_interval: 60  # Interval in minutes between source fetches (default: 60)
+
+# CORS configuration
+# cors:
+#   enabled: true
+#   allowed_origins:
+#     - "http://localhost:5173"   # SvelteKit dev server
+#     - "http://localhost:8080"   # Production
+#     - "https://your-domain.com" # Your production domain
+#   allowed_methods:
+#     - GET
+#     - POST
+#     - PUT
+#     - DELETE
+#     - OPTIONS
+#   allowed_headers:
+#     - Content-Type
+#     - Authorization
+#   allow_credentials: false

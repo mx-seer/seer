@@ -54,7 +54,7 @@ func main() {
 	defer sourceManager.Stop()
 
 	// Create API server
-	server := api.NewServer(database, sourceManager)
+	server := api.NewServer(database, sourceManager, cfg.CORS)
 
 	// Start HTTP server
 	go func() {

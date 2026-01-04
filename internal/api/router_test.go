@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mx-seer/seer/internal/config"
 	"github.com/mx-seer/seer/internal/db"
 )
 
@@ -25,7 +26,15 @@ func setupTestServer(t *testing.T) *Server {
 		database.Close()
 	})
 
-	return NewServer(database, nil)
+	corsConfig := config.CORSConfig{
+		Enabled:          true,
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: false,
+	}
+
+	return NewServer(database, nil, corsConfig)
 }
 
 func TestHealthEndpoint(t *testing.T) {

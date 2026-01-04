@@ -3,11 +3,13 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/mx-seer/seer/internal/api/handlers"
+	"github.com/mx-seer/seer/internal/config"
 	"github.com/mx-seer/seer/internal/db"
 	"github.com/mx-seer/seer/internal/sources"
 )
@@ -17,14 +19,16 @@ type Server struct {
 	db            *db.DB
 	router        *chi.Mux
 	sourceManager *sources.Manager
+	corsConfig    config.CORSConfig
 }
 
 // NewServer creates a new API server
-func NewServer(database *db.DB, sourceManager *sources.Manager) *Server {
+func NewServer(database *db.DB, sourceManager *sources.Manager, corsConfig config.CORSConfig) *Server {
 	s := &Server{
 		db:            database,
 		router:        chi.NewRouter(),
 		sourceManager: sourceManager,
+		corsConfig:    corsConfig,
 	}
 
 	s.setupMiddleware()
@@ -41,13 +45,31 @@ func (s *Server) setupMiddleware() {
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(middleware.Timeout(30 * time.Second))
 
-	// CORS for development
-	s.router.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	// CORS middleware
+	if s.corsConfig.Enabled {
+		s.router.Use(s.corsMiddleware())
+	}
+}
 
+// corsMiddleware returns a CORS middleware handler
+func (s *Server) corsMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+
+			// Check if origin is allowed
+			allowedOrigin := s.getAllowedOrigin(origin)
+			if allowedOrigin != "" {
+				w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+				w.Header().Set("Access-Control-Allow-Methods", strings.Join(s.corsConfig.AllowedMethods, ", "))
+				w.Header().Set("Access-Control-Allow-Headers", strings.Join(s.corsConfig.AllowedHeaders, ", "))
+
+				if s.corsConfig.AllowCredentials {
+					w.Header().Set("Access-Control-Allow-Credentials", "true")
+				}
+			}
+
+			// Handle preflight requests
 			if r.Method == "OPTIONS" {
 				w.WriteHeader(http.StatusOK)
 				return
@@ -55,7 +77,20 @@ func (s *Server) setupMiddleware() {
 
 			next.ServeHTTP(w, r)
 		})
-	})
+	}
+}
+
+// getAllowedOrigin checks if the origin is allowed and returns it
+func (s *Server) getAllowedOrigin(origin string) string {
+	for _, allowed := range s.corsConfig.AllowedOrigins {
+		if allowed == "*" {
+			return "*"
+		}
+		if allowed == origin {
+			return origin
+		}
+	}
+	return ""
 }
 
 // setupRoutes configures all API routes

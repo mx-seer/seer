@@ -12,11 +12,21 @@ type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	Sources  SourcesConfig  `yaml:"sources"`
+	CORS     CORSConfig     `yaml:"cors"`
 }
 
 // SourcesConfig holds source fetching settings
 type SourcesConfig struct {
 	FetchInterval int `yaml:"fetch_interval"` // Interval in minutes between fetches
+}
+
+// CORSConfig holds CORS middleware settings
+type CORSConfig struct {
+	Enabled          bool     `yaml:"enabled"`
+	AllowedOrigins   []string `yaml:"allowed_origins"`
+	AllowedMethods   []string `yaml:"allowed_methods"`
+	AllowedHeaders   []string `yaml:"allowed_headers"`
+	AllowCredentials bool     `yaml:"allow_credentials"`
 }
 
 // ServerConfig holds HTTP server settings
@@ -42,6 +52,13 @@ func Default() *Config {
 		},
 		Sources: SourcesConfig{
 			FetchInterval: 60, // Default: 1 hour
+		},
+		CORS: CORSConfig{
+			Enabled:          true,
+			AllowedOrigins:   []string{"*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Content-Type", "Authorization"},
+			AllowCredentials: false,
 		},
 	}
 }
